@@ -23,13 +23,50 @@ __declspec(naked) int __cdecl sum(int a, int b, int c)
     }
 }
 
+__declspec(naked) int __cdecl subtract(int a)
+{
+    __asm
+    {
+        push ebp;
+        mov ebp, esp;
+
+        sub [ebp + 8], 50;
+        mov eax, [ebp + 8];
+
+        mov esp, ebp;
+        pop ebp;
+        ret;
+    }
+}
+
+__declspec(naked) int __cdecl multiply(int a, int mul)
+{
+    __asm
+    {
+        push ebp;
+        mov ebp, esp;
+        sub esp, 4;
+
+        mov eax, [ebp + 12];
+        mov dword ptr [ebp - 4], eax;
+        mov ebx, [ebp - 4];
+
+        mov eax, [ebp + 8];
+
+        mul ebx;
+
+        mov esp, ebp;
+        pop ebp;
+        ret;
+    }
+}
+
 int main()
 {
-    int cool{}, con_handle{}, msg_len, title_len{};
+    int cool{}, con_handle{}, msg_len, title_len{}, multiplicator{};
     char buffer[32], title[16];
 
     std::string window_title{"learning asm"};
-
 
     // josh - let's do our calculation
     __asm
@@ -40,6 +77,17 @@ int main()
 
         call sum;
         add esp, 12;
+
+        push eax;
+        call subtract;
+        add esp, 4;
+
+        mov dword ptr multiplicator, 2;
+
+        push multiplicator;
+        push eax;
+        call multiply;
+        add esp, 8;
 
         mov cool, eax;
     }
