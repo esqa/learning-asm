@@ -28,11 +28,10 @@ __declspec(naked) int __cdecl sum(int a, int b, int c)
 
 int main()
 {
-    int cool, con_handle{};
+    int cool{}, con_handle{}, msg_len{};
+    char buffer[32];
 
-    char message[] = "Hello from asm!\n";
-    int msg_len = sizeof(message) - 1;
-
+    // josh - let's do our calculation
     __asm
     {
         push 2;
@@ -43,20 +42,28 @@ int main()
         add esp, 12;
 
         mov cool, eax;
+    }
 
+    msg_len = sprintf(buffer, "%d\n", cool); // NOLINT I know it's deprecated but "sprintf_s" sucks
+
+    // josh - let's call the stinky Windows API to get our handle
+    __asm
+    {
         push -11;
         call GetStdHandle;
-        mov con_handle, eax;
+        mov con_handle, eax; // josh - GetStdHandle was called, return register is eax for integers
+    }
 
-        push 0; // 4
-        push 0; // 8
-        push msg_len; // 12
-        lea eax, message;
-        push eax; // 16
-        mov eax, con_handle;
-        push eax; // 20
+    // josh - now let's actually print, push right to left onto the stack because of __stdcall
+    __asm
+    {
+        push 0;
+        push 0;
+        push msg_len;
+        lea eax, buffer; // josh - get address of our buffer
+        push eax;
+        push con_handle;
         call WriteConsoleA;
-        add esp, 20;
     }
 
     return 0;
