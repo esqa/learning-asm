@@ -63,17 +63,27 @@ int main()
         lea eax, buffer; // josh - get address of our buffer
         push eax;
         push con_handle;
-        call WriteConsoleA; // josh - It's an __stdcall so we don't have to clean-up the stack!
+        call WriteConsoleA; // josh - It's an __stdcall so we don't have to clean up the stack!
     }
 
-    strcpy_s(title, window_title.c_str());
-
-    // josh - let's try to set the window title!
-    __asm
+    // josh - small animation here
+    for (int i = 0; i < window_title.length(); i++)
     {
-        lea eax, title;
-        push eax;
-        call SetConsoleTitleA;
+        strncpy_s(title, sizeof(title), window_title.c_str(), i + 1);
+        title[i + 1] = '\0';
+
+        __asm
+        {
+            lea eax, title;
+            push eax;
+            call SetConsoleTitleA;
+        }
+
+        _asm
+        {
+            push 100;
+            call Sleep;
+        }
     }
 
     return 0;
