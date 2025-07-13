@@ -1,8 +1,5 @@
 #include <iostream>
-#include <chrono>
-#include <climits>
-#include <iomanip>
-#include <Windows.h>
+#include "Windows.h"
 
 __declspec(naked) int __cdecl sum(int a, int b, int c)
 {
