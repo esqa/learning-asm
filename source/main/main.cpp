@@ -28,7 +28,10 @@ __declspec(naked) int __cdecl sum(int a, int b, int c)
 
 int main()
 {
-    int cool{};
+    int cool, con_handle{};
+
+    char message[] = "Hello from asm!\n";
+    int msg_len = sizeof(message) - 1;
 
     __asm
     {
@@ -40,9 +43,21 @@ int main()
         add esp, 12;
 
         mov cool, eax;
-    }
 
-    printf("%d\n", cool);
+        push -11;
+        call GetStdHandle;
+        mov con_handle, eax;
+
+        push 0; // 4
+        push 0; // 8
+        push msg_len; // 12
+        lea eax, message;
+        push eax; // 16
+        mov eax, con_handle;
+        push eax; // 20
+        call WriteConsoleA;
+        add esp, 20;
+    }
 
     return 0;
 }
