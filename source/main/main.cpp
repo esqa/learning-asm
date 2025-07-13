@@ -25,8 +25,11 @@ __declspec(naked) int __cdecl sum(int a, int b, int c)
 
 int main()
 {
-    int cool{}, con_handle{}, msg_len{};
-    char buffer[32];
+    int cool{}, con_handle{}, msg_len, title_len{};
+    char buffer[32], title[16];
+
+    std::string window_title{"learning asm"};
+
 
     // josh - let's do our calculation
     __asm
@@ -61,6 +64,16 @@ int main()
         push eax;
         push con_handle;
         call WriteConsoleA; // josh - It's an __stdcall so we don't have to clean-up the stack!
+    }
+
+    strcpy_s(title, window_title.c_str());
+
+    // josh - let's try to set the window title!
+    __asm
+    {
+        lea eax, title;
+        push eax;
+        call SetConsoleTitleA;
     }
 
     return 0;
