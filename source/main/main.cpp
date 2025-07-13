@@ -4,18 +4,26 @@
 #include <iomanip>
 #include <Windows.h>
 
-int __cdecl sum(int a, int b)
+__declspec(naked) int __cdecl sum(int a, int b, int c)
 {
-    int result{};
-
     __asm
     {
-        mov eax, a;
-        add eax, b;
-        mov result, eax;
-    }
+        push ebp;
+        mov ebp, esp;
+        sub esp, 4;
 
-    return result;
+        mov dword ptr [ebp - 4], 100;
+
+        mov eax, [ebp + 8]; // 7
+        add eax, [ebp + 12]; // 4
+        add eax, [ebp + 16]; // 2
+
+        add eax, [ebp - 4];
+
+        mov esp, ebp;
+        pop ebp;
+        ret;
+    }
 }
 
 int main()
@@ -24,14 +32,17 @@ int main()
 
     __asm
     {
-        push 10;
-        push 20;
+        push 2;
+        push 4;
+        push 7;
+
         call sum;
-        add esp, 8;
+        add esp, 12;
+
         mov cool, eax;
     }
 
-    printf("Result: %d\n", cool);
+    printf("%d\n", cool);
 
     return 0;
 }
