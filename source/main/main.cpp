@@ -4,30 +4,34 @@
 #include <iomanip>
 #include <Windows.h>
 
-int main()
+int __cdecl sum(int a, int b)
 {
-    const int n = 1024;
-    long long sum;
+    int result{};
 
-    auto calc_start = std::chrono::high_resolution_clock::now();
-
-    for (int i = 0; i < n; i++)
+    __asm
     {
-        sum = i;
+        mov eax, a;
+        add eax, b;
+        mov result, eax;
     }
 
-    auto calc_end = std::chrono::high_resolution_clock::now();
+    return result;
+}
 
-    std::chrono::duration<double> calc_duration = calc_end - calc_start;
+int main()
+{
+    int cool{};
 
-    std::cout << std::fixed << std::setprecision(9);
-    std::cout << "Sum calculation duration: " << calc_duration.count() << " seconds\n";
-    std::cout << "Sum: " << sum << "\n";
+    __asm
+    {
+        push 10;
+        push 20;
+        call sum;
+        add esp, 8;
+        mov cool, eax;
+    }
 
-    SetConsoleTitleA("calc but fast"); // i'm calling this after the main calc since it's gonna mess with the speed
-
-    std::cout << "\nPress enter to exit";
-    std::cin.get();
+    printf("Result: %d\n", cool);
 
     return 0;
 }
