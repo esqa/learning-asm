@@ -49,7 +49,7 @@ int main()
     // josh - let's call the stinky Windows API to get our handle
     __asm
     {
-        push -11;
+        push -11; // STD_OUTPUT_HANDLE
         call GetStdHandle;
         mov con_handle, eax; // josh - GetStdHandle was called, return register is eax for integers
     }
@@ -63,7 +63,7 @@ int main()
         lea eax, buffer; // josh - get address of our buffer
         push eax;
         push con_handle;
-        call WriteConsoleA;
+        call WriteConsoleA; // josh - It's an __stdcall so we don't have to clean-up the stack!
     }
 
     return 0;
