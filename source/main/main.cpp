@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Windows.h"
 
-__declspec(naked) int __cdecl sum(int a, int b, int c)
+__declspec(naked) int __cdecl sum(int a, int b, int c, int d, int skip)
 {
     __asm
     {
@@ -9,14 +9,24 @@ __declspec(naked) int __cdecl sum(int a, int b, int c)
         mov ebp, esp;
         sub esp, 4;
 
-        mov dword ptr [ebp - 4], 100;
+        push edx;
+        mov edx, [ebp + 24]; // josh - get our condition from args
+        mov [ebp - 4], edx; // josh - move args into local variable
+        pop edx;
 
-        mov eax, [ebp + 8]; // 7
-        add eax, [ebp + 12]; // 4
-        add eax, [ebp + 16]; // 2
+        mov edx, [ebp - 4];
+        test edx, edx;
+        jne skip_calc;
 
-        add eax, [ebp - 4];
+        mov eax, [ebp + 8];
+        add eax, [ebp + 12];
+        add eax, [ebp + 16];
+        jmp epilogue;
 
+        skip_calc:
+        mov eax, [ebp + 20];
+
+        epilogue:
         mov esp, ebp;
         pop ebp;
         ret;
@@ -68,15 +78,19 @@ int main()
 
     std::string window_title{"learning asm"};
 
+    int haha;
+
     // josh - let's do our calculation
     __asm
     {
-        push 2;
-        push 4;
+        push 0; // josh - skip and add below?
+        push 1000;
         push 7;
+        push 4;
+        push 2;
 
         call sum;
-        add esp, 12;
+        add esp, 20;
 
         push eax;
         call subtract;
@@ -92,7 +106,7 @@ int main()
         mov cool, eax;
     }
 
-    msg_len = sprintf(buffer, "%d\n", cool); // NOLINT I know it's deprecated but "sprintf_s" sucks
+    msg_len = sprintf(buffer, "%d\n", haha); // NOLINT I know it's deprecated but "sprintf_s" sucks
 
     // josh - let's call the stinky Windows API to get our handle
     __asm
