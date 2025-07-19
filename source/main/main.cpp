@@ -127,7 +127,7 @@ int main()
             call SetConsoleTitleA;
         }
 
-        _asm
+        __asm
         {
             push 100;
             call Sleep;
