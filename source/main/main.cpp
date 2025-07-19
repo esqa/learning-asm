@@ -1,5 +1,13 @@
+#include "main.h"
+
+#include <format>
 #include <iostream>
+#include <string>
+
 #include "Windows.h"
+
+static int g_out_handle;
+static int g_in_handle;
 
 __declspec(naked) int __cdecl sum(int a, int b, int c, int d, int skip)
 {
@@ -33,14 +41,16 @@ __declspec(naked) int __cdecl sum(int a, int b, int c, int d, int skip)
     }
 }
 
-__declspec(naked) int __cdecl subtract(int a)
+__declspec(naked) int __cdecl subtract(int a, int b)
 {
     __asm
     {
         push ebp;
         mov ebp, esp;
 
-        sub [ebp + 8], 50;
+        mov edx, [ebp + 12];
+
+        sub [ebp + 8], edx;
         mov eax, [ebp + 8];
 
         mov esp, ebp;
@@ -71,14 +81,45 @@ __declspec(naked) int __cdecl multiply(int a, int mul)
     }
 }
 
+void print_string(const char* str)
+{
+    int out_handle{}, msg_length{};
+
+    char buffer[512];
+
+    msg_length = sprintf(buffer, "%s\n", str); // NOLINT i don't mind it being deprecated!!
+
+    __asm
+    {
+        push 0;
+        push 0;
+        push msg_length;
+
+        lea eax, buffer;
+        push eax;
+        push g_out_handle;
+        call WriteConsoleA;
+    }
+}
+
 int main()
 {
-    int cool{}, con_handle{}, msg_len, title_len{}, multiplicator{};
-    char buffer[32], title[16];
-
     std::string window_title{"learning asm"};
 
-    int haha;
+    int title_len{}, retval{};
+    char title[16];
+
+    // josh - get our handles here!
+    __asm
+    {
+        push -10;
+        call GetStdHandle;
+        mov g_in_handle, eax;
+
+        push -11;
+        call GetStdHandle;
+        mov g_out_handle, eax;
+    }
 
     // josh - let's do our calculation
     __asm
@@ -92,41 +133,20 @@ int main()
         call sum;
         add esp, 20;
 
+        push 10; // josh - subtract by how much
         push eax;
         call subtract;
-        add esp, 4;
+        add esp, 8;
 
-        mov dword ptr multiplicator, 2;
-
-        push multiplicator;
+        push 2; // josh - multiply by how much
         push eax;
         call multiply;
         add esp, 8;
 
-        mov cool, eax;
+        mov retval, eax;
     }
 
-    msg_len = sprintf(buffer, "%d\n", haha); // NOLINT I know it's deprecated but "sprintf_s" sucks
-
-    // josh - let's call the stinky Windows API to get our handle
-    __asm
-    {
-        push -11; // STD_OUTPUT_HANDLE
-        call GetStdHandle;
-        mov con_handle, eax; // josh - GetStdHandle was called, return register is eax for integers
-    }
-
-    // josh - now let's actually print, push right to left onto the stack because of __stdcall
-    __asm
-    {
-        push 0;
-        push 0;
-        push msg_len;
-        lea eax, buffer; // josh - get address of our buffer
-        push eax;
-        push con_handle;
-        call WriteConsoleA; // josh - It's an __stdcall so we don't have to clean up the stack!
-    }
+    print_string(std::to_string(retval).c_str());
 
     // josh - small animation here
     for (int i = 0; i < window_title.length(); i++)
