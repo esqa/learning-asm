@@ -41,6 +41,28 @@ __declspec(naked) int __cdecl sum(int a, int b, int c, int d, int skip)
     }
 }
 
+// josh, this is faster because we're not using the stack at all, registers are pretty much the fastest we can go
+// there might be a SIMD instruction that I'm not aware of but I'll learn about them in the future, the biggest issue
+// using non-standard calling conventions is that we have to setup the call ourselves, ofcourse inlining this will be
+// even faster since we don't have to set up the stackframe, saving us a minimum of 5 instructions
+// (call, prologue, epilogue) I'm just testing stuff! :D thinking about all of this now, I'll try to write the fastest
+// asm i can starting with multiply
+__declspec(naked) int subtract_fast(int a, int b, int c)
+{
+    __asm
+    {
+        push ebp;
+        mov ebp, esp;
+
+        sub eax, edx;
+        sub eax, esi;
+
+        mov esp, ebp;
+        pop ebp;
+        ret;
+    }
+}
+
 __declspec(naked) int __cdecl subtract(int a, int b)
 {
     __asm
@@ -74,6 +96,24 @@ __declspec(naked) int __cdecl multiply(int a, int mul)
         mov eax, [ebp + 8];
 
         mul ebx;
+
+        mov esp, ebp;
+        pop ebp;
+        ret;
+    }
+}
+
+// josh - no arguments are needed since we know which arguments will be in the corresponding registers
+// simply because we have to setup the call ourselves, i'm adding another argument for learning purposes
+__declspec(naked) int multiply_fast()
+{
+    __asm
+    {
+        push ebp;
+        mov ebp, esp;
+
+        mul esi;
+        add eax, ecx;
 
         mov esp, ebp;
         pop ebp;
@@ -120,6 +160,18 @@ int main()
         call GetStdHandle;
         mov g_out_handle, eax;
     }
+
+    __asm
+    {
+        mov eax, 100;
+        mov esi, 2; // multiply eax by 2
+        mov ecx, 50; // add 50 on top
+        call multiply_fast; // we don't have to adjust esp since we didn't have to push anything onto the stack!
+        mov retval, eax;
+    }
+
+    print_string(std::to_string(retval).c_str());
+
 
     // josh - let's do our calculation
     __asm
